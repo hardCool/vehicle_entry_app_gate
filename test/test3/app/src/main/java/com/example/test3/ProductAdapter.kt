@@ -1,4 +1,6 @@
-import android.util.Log
+
+package com.example.test3
+
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -6,8 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.test3.Product
-import com.example.test3.R
+import com.bumptech.glide.request.RequestOptions
 
 class ProductAdapter(private val products: List<Product>) :
     RecyclerView.Adapter<ProductAdapter.ProductViewHolder>() {
@@ -30,14 +31,12 @@ class ProductAdapter(private val products: List<Product>) :
         holder.prodDesc.text = product.prod_desc
         holder.prodPrice.text = product.price
 
-        val baseUrlImages = "http://192.168.1.35/api_nn/admin_nn/"
-        val imageUrl = baseUrlImages + product.prod_image
-        Log.d("ProductAdapter", "Image URL: $imageUrl")
-
         Glide.with(holder.itemView.context)
-            .load(imageUrl)
-            .placeholder(R.drawable.placeholder) // Placeholder image while loading
-            .error(R.drawable.error) // Error image if load fails
+            .load(product.prod_image)
+            .apply(RequestOptions()
+                .placeholder(R.drawable.placeholder) // Placeholder while loading
+                .error(R.drawable.error)             // Error image if load fails
+            )
             .into(holder.prodImage)
     }
 

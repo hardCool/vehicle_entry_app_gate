@@ -1,3 +1,4 @@
+
 package com.example.test3
 
 data class Product(
@@ -7,5 +8,5 @@ data class Product(
     val prod_image: String,
     val prod_desc: String,
     val price: String,
-    val prod_status: String
+    val prod_status: String,
 )
