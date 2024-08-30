@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Solid Background Color -->
+    <solid android:color="@color/card_background" /> <!-- Background color -->
+
+    <!-- Border and Corner Radius -->
+    <corners android:radius="12dp" /> <!-- Rounded corners -->
+
+    <stroke
+        android:width="2dp"
+        android:color="@color/purple_700" /> <!-- Border color and width -->
+
+    <!-- Optional: Add a shadow effect -->
+    <padding
+        android:left="4dp"
+        android:right="4dp"
+        android:top="4dp"
+        android:bottom="4dp" />
+</shape>

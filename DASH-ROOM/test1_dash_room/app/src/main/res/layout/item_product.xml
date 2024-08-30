@@ -1,0 +1,18 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable
+            name="product"
+            type="com.example.test1_dash_room.Product"/>
+    </data>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <!-- Bind product data to views here -->
+        <TextView
+            android:id="@+id/productName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{product.name}"/>
+        <!-- Add other views as needed -->
+    </RelativeLayout>
+</layout>
