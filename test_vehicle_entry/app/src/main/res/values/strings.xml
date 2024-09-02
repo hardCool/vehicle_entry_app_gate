@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">test_vehicle_entry</string>
+    <string name="fetch_all_vehicles">Fetch All Vehicles</string>
+</resources>
