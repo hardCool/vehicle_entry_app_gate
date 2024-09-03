@@ -31,7 +31,7 @@
             android:label="Signup Page" />
         <activity
             android:name=".DashboardActivity"
-            android:label="Signup Page" />
+            android:label="Vehicle Entry System" />
     </application>
 
     <uses-permission android:name="android.permission.INTERNET" />
