@@ -5,8 +5,10 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
 import javax.mail.Message
 import javax.mail.MessagingException
@@ -24,6 +26,7 @@ class SignupActivity : AppCompatActivity() {
     private lateinit var signupPassword: EditText
     private lateinit var signupName: EditText
     private lateinit var loginLink: TextView
+    private val db = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,27 +45,62 @@ class SignupActivity : AppCompatActivity() {
             val password = signupPassword.text.toString().trim()
             val name = signupName.text.toString().trim()
 
-            auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    sendApprovalEmail(name, email)
-                    // Show message that approval is pending
-                    startActivity(Intent(this, LoginActivity::class.java))
-                } else {
-                    // Show error message
+            if (email.isNotEmpty() && password.isNotEmpty() && name.isNotEmpty()) {
+                auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = auth.currentUser?.uid ?: return@addOnCompleteListener
+                        storeUserApprovalStatus(uid, name, email)
+                        sendApprovalEmail(name, email)
+                        Toast.makeText(this, "Registration successful. Approval pending.", Toast.LENGTH_LONG).show()
+                        startActivity(Intent(this, LoginActivity::class.java))
+                        finish()
+                    } else {
+                        Toast.makeText(this, "Registration failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    }
                 }
+            } else {
+                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
             }
         }
 
         loginLink.setOnClickListener {
-            // Launch LoginActivity when "Have an account? Please Login!" is clicked
             startActivity(Intent(this, LoginActivity::class.java))
         }
     }
 
+    private fun storeUserApprovalStatus(uid: String, name: String, email: String) {
+        val user = hashMapOf(
+            "uid" to uid,
+            "name" to name,
+            "email" to email,
+            "approval_status" to "pending"
+        )
+
+        db.collection("users").document(uid)
+            .set(user)
+            .addOnSuccessListener {
+                // Successfully stored user approval status
+            }
+            .addOnFailureListener { e ->
+                e.printStackTrace()
+            }
+    }
+
     private fun sendApprovalEmail(name: String, email: String) {
-        val recipientEmail = "hardev.28094439@delhipolice.gov.in"
-        var subject = "New User Approval Request"
-        val message = "Please approve the following user:\n\nName: $name\nEmail: $email"
+        val recipientEmail = "hardevcool@gmail.com"
+        val subject = "New User Approval Request"
+        val baseUrl = "https://yourbackenddomain.com/approve_user" // Replace with your backend URL
+        val uniqueToken = UUID.randomUUID().toString() // Generate a unique token
+        val approvalLink = "$baseUrl?token=$uniqueToken"
+        val message = """
+        Please approve the following user:
+
+        Name: $name
+        Email: $email
+
+        Click the link below to approve the user:
+        $approvalLink
+    """.trimIndent()
 
         Thread {
             try {
@@ -75,21 +113,26 @@ class SignupActivity : AppCompatActivity() {
 
                 val session = Session.getDefaultInstance(props, object : javax.mail.Authenticator() {
                     override fun getPasswordAuthentication(): PasswordAuthentication {
-                        return PasswordAuthentication("your_email@gmail.com", "your_password")
+                        return PasswordAuthentication("vehicleentrysys@gmail.com", "icek yzsz vpfa hmnm")
                     }
                 })
 
                 val mimeMessage = MimeMessage(session).apply {
-                    setFrom(InternetAddress("your_email@gmail.com"))
+                    setFrom(InternetAddress("vehicleentrysys@gmail.com"))
                     addRecipient(Message.RecipientType.TO, InternetAddress(recipientEmail))
-                    subject = subject
+                    this.subject = subject
                     setText(message)
                 }
 
                 Transport.send(mimeMessage)
+                println("Email sent successfully")
             } catch (e: MessagingException) {
                 e.printStackTrace()
+                println("Failed to send email: ${e.message}")
             }
         }.start()
     }
+
 }
+
+

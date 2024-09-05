@@ -9,10 +9,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
+    private val db = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +38,8 @@ class LoginActivity : AppCompatActivity() {
 
             auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    checkUserApproval()  // Check if the user is approved
+                    val uid = auth.currentUser?.uid ?: return@addOnCompleteListener
+                    checkUserApproval(uid)
                 } else {
                     Toast.makeText(this, "Login failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -48,18 +51,27 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkUserApproval() {
-        // Check user approval status (this could be handled via Firestore or another backend service)
-        // Assuming approval status is handled on Firebase
-        val user = auth.currentUser
-        // Simulate the approval check
-        if (user != null) {
-            // If the user is approved, navigate to DashboardActivity
-            startActivity(Intent(this, DashboardActivity::class.java))
-            finish()
-        } else {
-            // Show a message that approval is pending
-            Toast.makeText(this, "Approval is pending. Please wait for approval.", Toast.LENGTH_SHORT).show()
-        }
+    private fun checkUserApproval(uid: String) {
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val approvalStatus = document.getString("approval_status")
+                    if (approvalStatus == "approved") {
+                        startActivity(Intent(this, DashboardActivity::class.java))
+                        finish()
+                    } else {
+                        Toast.makeText(this, "Your account is pending approval. Please wait.", Toast.LENGTH_LONG).show()
+                        auth.signOut()
+                    }
+                } else {
+                    Toast.makeText(this, "User data not found.", Toast.LENGTH_LONG).show()
+                    auth.signOut()
+                }
+            }
+            .addOnFailureListener { e ->
+                e.printStackTrace()
+                Toast.makeText(this, "Error checking approval status: ${e.message}", Toast.LENGTH_LONG).show()
+                auth.signOut()
+            }
     }
 }
